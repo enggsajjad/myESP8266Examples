@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Accelerometer Graphs</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rickshaw/1.6.0/rickshaw.min.css">
+    <link type="text/css" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css">
+    <link type="text/css" rel="stylesheet" href="main.css">
+</head>
+
+<div class="column_wrapper">
+    <div class="chart_container">
+        <div id="accel_y_axis" class="y_axis"></div>
+        <div id="accel_chart" class="chart"></div>
+    </div>
+</div>
+
+<div class="column_wrapper">
+    <div class="chart_container">
+        <div id="gyro_y_axis" class="y_axis"></div>
+        <div id="gyro_chart" class="chart"></div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rickshaw/1.6.0/rickshaw.min.js"></script>
+<script src="https://cdn.rawgit.com/shutterstock/rickshaw/v1.6.0/src/js/Rickshaw.Graph.RangeSlider.js"></script>
+<script src="https://cdn.rawgit.com/shutterstock/rickshaw/v1.6.0/src/js/Rickshaw.Graph.RangeSlider.Preview.js"></script>
+<script src="https://cdn.rawgit.com/shutterstock/rickshaw/v1.6.0/src/js/Rickshaw.Graph.Smoother.js"></script>
+
+<script src="main.js"></script>
+<script>
+    const init = async function() {
+    const response = await fetch('/serial_config');
+    const config = await response.json();
+    console.log('serial_config', config)
+    sg_data = Seriographer.init({
+        io_source: '/port/COM'+config.port,
+        sets: [
+            {
+                graph_el: 'accel_chart',
+                graph_y_el: 'accel_y_axis',
+                mapping: function(data){
+                    var parts = data.split("\t");
+                    return {
+                        x: parseInt(parts[6], 10),
+                        y: [
+                            parseInt(parts[0]), /*ax*/
+                            parseInt(parts[1]), /*ay*/
+                            parseInt(parts[2])  /*az*/
+                        ]
+                    };
+                },
+                graph: {
+                    series: [
+                        {
+                            color: 'red',
+                            name: 'ax',
+                            data: []
+                        },
+                        {
+                            color: 'green',
+                            name: 'ay',
+                            data: []
+                        },
+                        {
+                            color: 'blue',
+                            name: 'az',
+                            data: []
+                        }
+                    ]
+                },
+                y_axis: {
+                }
+            },
+            {
+                graph_el: 'gyro_chart',
+                graph_y_el: 'gyro_y_axis',
+                mapping: function(data){
+                    var parts = data.split("\t");
+                    return {
+                        x: parseInt(parts[6], 10),
+                        y: [
+                            parseInt(parts[3]), /*gx*/
+                            parseInt(parts[4]), /*gy*/
+                            parseInt(parts[5])  /*gz*/
+                        ]
+                    };
+                },
+                graph: {
+                    min: -50000,
+                    max: 50000,
+                    series: [
+                        {
+                            color: 'orange',
+                            name: 'gx',
+                            data: []
+                        },
+                        {
+                            color: 'teal',
+                            name: 'gy',
+                            data: []
+                        },
+                        {
+                            color: 'purple',
+                            name: 'gz',
+                            data: []
+                        }
+                    ]
+                }
+            }
+        ],
+        overrides: {
+            graph: {
+                width: 500,
+                interpolation: 'cardinal'
+            }
+        }
+    });
+}
+init()
+</script>
